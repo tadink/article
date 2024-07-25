@@ -1,6 +1,6 @@
 module GinTest
 
-go 1.20
+go 1.22
 
 require (
 	github.com/CloudyKit/jet v2.1.2+incompatible
@@ -37,5 +37,6 @@ require (
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
