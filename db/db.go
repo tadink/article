@@ -136,7 +136,13 @@ func GetArticleList(size int) ([]*Article, error) {
 		return nil, err
 	}
 	offset := rand.Intn(count)
-
+	if count <= size {
+		offset = 0
+	}
+	if offset > 0 && offset > count-size {
+		offset = count - size
+	}
+	fmt.Println("offset:", offset)
 	s := fmt.Sprintf("select * from article %s limit ?,?", order)
 	stmt, err := db.Prepare(s)
 	if err != nil {

@@ -10,7 +10,7 @@
     <h2>{{siteConfig.IndexTitle}}</h2>
 
     <p>{{randomUrl("detail")}}</p>
-    {{range _,a := articles(1,1,20,"id","asc")}}
+    {{range _,a := articles(20)}}
         <p>{{a.Title}}</p>
     {{end}}
 </body>

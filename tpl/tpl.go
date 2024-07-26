@@ -53,14 +53,9 @@ func randomUrl(args jet.Arguments) reflect.Value {
 	return reflect.ValueOf(u)
 }
 func articles(args jet.Arguments) reflect.Value {
-	args.RequireNumOfArguments("articles", 5, 5)
-	typeId := args.Get(0)
-	page := args.Get(1)
-	size := args.Get(2)
-	order := args.Get(3)
-	direction := args.Get(4)
-	typeId.CanInt()
-	articles, err := db.QueryArticleList(int(typeId.Float()), int(page.Float()), int(size.Float()), order.String(), direction.String())
+	args.RequireNumOfArguments("articles", 1, 1)
+	size := args.Get(0)
+	articles, err := db.GetArticleList(int(size.Float()))
 	if err != nil {
 		panic(err)
 	}
