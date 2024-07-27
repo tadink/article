@@ -20,7 +20,7 @@ type DBConfig struct {
 }
 
 func Init() error {
-	data, err := os.ReadFile("config.json")
+	data, err := os.ReadFile("config/config.json")
 	if err != nil {
 		return err
 	}

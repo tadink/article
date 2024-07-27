@@ -1,8 +1,8 @@
 package db
 
 import (
-	"GinTest/config"
 	"database/sql"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/glebarez/go-sqlite"
 )
 
 var db *sql.DB
@@ -65,11 +65,16 @@ type Article struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
+//go:embed site.sql
+var initSql []byte
+
 func Init() error {
 	var err error
-	dbConf := config.GetDBConf()
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", dbConf.User, dbConf.Password, dbConf.Host, dbConf.Port, dbConf.DbName)
-	db, err = sql.Open("mysql", dsn)
+
+	db, err = sql.Open("sqlite", "config/data.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=cache(shared)")
+	// dbConf := config.GetDBConf()
+	// dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", dbConf.User, dbConf.Password, dbConf.Host, dbConf.Port, dbConf.DbName)
+	// db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return err
 	}
@@ -77,6 +82,11 @@ func Init() error {
 	db.SetConnMaxLifetime(24 * time.Hour)
 	db.SetMaxIdleConns(50)
 	db.SetMaxOpenConns(100)
+	_, err = db.Exec(string(initSql))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
