@@ -42,8 +42,7 @@ func main() {
 		serverStart()
 		return
 	}
-	cmd := os.Args[1]
-	switch cmd {
+	switch os.Args[1] {
 	case "start":
 		handleStartCmd()
 	case "stop":
