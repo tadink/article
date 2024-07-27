@@ -1,8 +1,10 @@
 package frontend
 
 import (
+	"GinTest/config"
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,11 +17,10 @@ var srv *http.Server
 func Start(configs *sync.Map) {
 	engine := initEngine(configs)
 	srv = &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%d", config.GetServerPort()),
 		Handler: engine,
 	}
 	go listen()
-
 }
 func listen() {
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

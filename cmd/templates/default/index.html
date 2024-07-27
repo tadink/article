@@ -6,12 +6,7 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>{{article.Title}}</h1>
+    <h1>{{siteConfig.Domain}}</h1>
     <h2>{{siteConfig.IndexTitle}}</h2>
-
-    <p>{{randomUrl("detail")}}</p>
-    {{range _,a := articles(20)}}
-        <p>{{a.Title}}</p>
-    {{end}}
 </body>
 </html>

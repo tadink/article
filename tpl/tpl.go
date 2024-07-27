@@ -6,6 +6,7 @@ import (
 	"math/rand/v2"
 	"path"
 	"reflect"
+	"strconv"
 
 	"github.com/CloudyKit/jet"
 )
@@ -14,7 +15,8 @@ var templateSet *jet.Set = jet.NewHTMLSet("./templates")
 
 func init() {
 	templateSet.AddGlobalFunc("randomUrl", randomUrl)
-	templateSet.AddGlobalFunc("articles", articles)
+	templateSet.AddGlobalFunc("getArticles", getArticles)
+	templateSet.AddGlobalFunc("getArticle", getArticle)
 }
 
 func GetTemplate(templateDir, templateName string) (*jet.Template, error) {
@@ -52,12 +54,25 @@ func randomUrl(args jet.Arguments) reflect.Value {
 	u = fmt.Sprintf("/%s%s/%d", t, suffix[0].String(), articleId)
 	return reflect.ValueOf(u)
 }
-func articles(args jet.Arguments) reflect.Value {
-	args.RequireNumOfArguments("articles", 1, 1)
+func getArticles(args jet.Arguments) reflect.Value {
+	args.RequireNumOfArguments("getArticles", 1, 1)
 	size := args.Get(0)
 	articles, err := db.GetArticleList(int(size.Float()))
 	if err != nil {
 		panic(err)
 	}
 	return reflect.ValueOf(articles)
+}
+func getArticle(args jet.Arguments) reflect.Value {
+	args.RequireNumOfArguments("getArticle", 0, 1)
+	p := args.Get(0)
+	id := ""
+	if p.IsValid() && p.CanInt() {
+		id = strconv.FormatInt(p.Int(), 10)
+	}
+	article, err := db.GetArticle(id)
+	if err != nil {
+		panic(err)
+	}
+	return reflect.ValueOf(article)
 }

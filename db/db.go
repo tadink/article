@@ -1,6 +1,7 @@
 package db
 
 import (
+	"GinTest/config"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -66,18 +67,20 @@ type Article struct {
 
 func Init() error {
 	var err error
-	db, err = sql.Open("mysql", "root:root@tcp(127.0.1:3306)/site")
+	dbConf := config.GetDBConf()
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", dbConf.User, dbConf.Password, dbConf.Host, dbConf.Port, dbConf.DbName)
+	db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return err
 	}
 	db.SetConnMaxIdleTime(time.Hour)
 	db.SetConnMaxLifetime(24 * time.Hour)
-	db.SetMaxIdleConns(10)
-	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(50)
+	db.SetMaxOpenConns(100)
 	return nil
 }
 
-func LoadConfigs() (*sync.Map, error) {
+func LoadSites() (*sync.Map, error) {
 	stmt, err := db.Prepare(`select * from site_config`)
 	if err != nil {
 		return nil, err
@@ -142,7 +145,6 @@ func GetArticleList(size int) ([]*Article, error) {
 	if offset > 0 && offset > count-size {
 		offset = count - size
 	}
-	fmt.Println("offset:", offset)
 	s := fmt.Sprintf("select * from article %s limit ?,?", order)
 	stmt, err := db.Prepare(s)
 	if err != nil {
@@ -154,6 +156,7 @@ func GetArticleList(size int) ([]*Article, error) {
 			panic(err)
 		}
 	}()
+
 	rows, err := stmt.Query(offset, size)
 	if err != nil {
 		return nil, err

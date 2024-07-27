@@ -5,6 +5,7 @@ import (
 	"GinTest/tpl"
 	"bytes"
 	"crypto/md5"
+	_ "embed"
 	"fmt"
 	"image"
 	"image/draw"
@@ -12,25 +13,44 @@ import (
 	"net"
 	"os"
 	"path"
+	"strings"
 	"sync"
 
 	"github.com/CloudyKit/jet"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/freetype"
 	"golang.org/x/image/font"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const HTML_CONTENT_TYPE = "text/html;charset=utf-8"
 
+//go:embed luxisr.ttf
+var fileByte []byte
+
 func initEngine(configs *sync.Map) *gin.Engine {
-	engine := gin.Default()
+	out := &lumberjack.Logger{
+		Filename:   "./logs/gin.log",
+		MaxSize:    500, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28,   //days
+		Compress:   true, // disabled by default
+	}
+	gin.SetMode(gin.ReleaseMode)
+	gin.DisableConsoleColor()
+	engine := gin.New()
+
+	engine.Use(gin.LoggerWithConfig(gin.LoggerConfig{Output: out}))
+
+	engine.Use(gin.RecoveryWithWriter(out))
 	engine.Use(CacheMiddleware())
 	engine.Use(SiteConfigMiddleware(configs))
-	engine.GET("/favicon.ico", faviconHandle)
 	engine.GET("/", indexHandle)
+	engine.GET("/favicon.ico", faviconHandle)
 	engine.GET("/list:suffix/:id", listHandle)
 	engine.GET("/detail:suffix/:id", detailHandle)
 	engine.NoRoute(noRoute)
+	engine.Static("/static", "./static")
 	return engine
 }
 
@@ -55,7 +75,6 @@ func listHandle(c *gin.Context) {
 }
 
 func detailHandle(c *gin.Context) {
-
 	s := c.MustGet("siteconfig").(*db.SiteConfig)
 	templateName := s.GetTemplateName()
 	id := c.Param("id")
@@ -71,11 +90,11 @@ func detailHandle(c *gin.Context) {
 }
 
 func faviconHandle(c *gin.Context) {
-	data, _ := os.ReadFile("luxisr.ttf")
-	fon, _ := freetype.ParseFont(data)
+	t := strings.ToUpper(c.Request.Host[:1])
+	fon, _ := freetype.ParseFont(fileByte)
 	fg, bg := image.Black, image.Transparent
-	fontSize := 25.0
-	rgba := image.NewRGBA(image.Rect(0, 0, 50, 50))
+	fontSize := 14.0
+	rgba := image.NewRGBA(image.Rect(0, 0, 25, 25))
 	draw.Draw(rgba, rgba.Bounds(), bg, image.Point{}, draw.Src)
 	f := freetype.NewContext()
 	//f.SetDPI(320.0)
@@ -86,8 +105,8 @@ func faviconHandle(c *gin.Context) {
 	f.SetSrc(fg)
 	f.SetHinting(font.HintingNone)
 	// Draw the text.
-	pt := freetype.Pt(int(f.PointToFixed(fontSize)>>6)-8, int(f.PointToFixed(fontSize)>>6)+8)
-	_, err := f.DrawString("H", pt)
+	pt := freetype.Pt(int(f.PointToFixed(fontSize)>>6)-7, int(f.PointToFixed(fontSize)>>6)+5)
+	_, err := f.DrawString(string(t), pt)
 	if err != nil {
 		panic(err)
 	}
@@ -105,9 +124,8 @@ func noRoute(c *gin.Context) {
 		c.Data(200, HTML_CONTENT_TYPE, []byte(err.Error()))
 		return
 	}
-	vars := make(jet.VarMap)
+	vars := c.MustGet("vars").(jet.VarMap)
 	vars.Set("article", article)
-	vars.Set("siteConfig", s)
 	respond(c, templateName, "detail.html", vars)
 }
 
