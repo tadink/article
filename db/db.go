@@ -1,11 +1,13 @@
 package db
 
 import (
+	"GinTest/global"
 	"database/sql"
 	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -70,14 +72,11 @@ var initSql []byte
 
 func Init() error {
 	var err error
-
 	db, err = sql.Open("sqlite", "config/data.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=cache(shared)")
-	// dbConf := config.GetDBConf()
-	// dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", dbConf.User, dbConf.Password, dbConf.Host, dbConf.Port, dbConf.DbName)
-	// db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return err
 	}
+	global.Cleanups = append(global.Cleanups, func() error { return db.Close() })
 	db.SetConnMaxIdleTime(time.Hour)
 	db.SetConnMaxLifetime(24 * time.Hour)
 	db.SetMaxIdleConns(50)
@@ -86,7 +85,6 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -313,6 +311,9 @@ func QueryArticleCount() (int, error) {
 	if err != nil {
 		return count, err
 	}
-	_ = stmt.Close()
+	err = stmt.Close()
+	if err != nil {
+		slog.Error(err.Error())
+	}
 	return count, err
 }

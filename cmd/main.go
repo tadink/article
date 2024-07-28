@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"GinTest/config"
 	"GinTest/db"
 	"GinTest/frontend"
+	"GinTest/global"
 	"GinTest/log"
 )
 
@@ -100,12 +102,18 @@ func handleStopCmd() {
 }
 func serverStart() {
 	frontend.Start(sites)
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-	<-quit
+	ctx, cancelFunc := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancelFunc()
+	<-ctx.Done()
 	slog.Info("Shutdown Server ...")
 	if err := frontend.Shutdown(); err != nil {
 		slog.Error("Server Shutdown:", "error", err.Error())
+	}
+	for _, cleanup := range global.Cleanups {
+		err := cleanup()
+		if err != nil {
+			slog.Error(err.Error())
+		}
 	}
 	slog.Info("Server exiting")
 }

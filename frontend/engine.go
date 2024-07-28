@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"GinTest/db"
+	"GinTest/global"
 	"GinTest/tpl"
 	"bytes"
 	"crypto/md5"
@@ -36,6 +37,7 @@ func initEngine(configs *sync.Map) *gin.Engine {
 		MaxAge:     28,   //days
 		Compress:   true, // disabled by default
 	}
+	global.Cleanups = append(global.Cleanups, func() error { return out.Close() })
 	gin.SetMode(gin.ReleaseMode)
 	gin.DisableConsoleColor()
 	engine := gin.New()

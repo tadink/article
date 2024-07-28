@@ -8,15 +8,7 @@ import (
 var _conf AppConfig
 
 type AppConfig struct {
-	ServerPort int       `json:"server_port"`
-	Db         *DBConfig `json:"db"`
-}
-type DBConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	DbName   string `json:"db_name"`
+	ServerPort int `json:"server_port"`
 }
 
 func Init() error {
@@ -33,8 +25,4 @@ func Init() error {
 
 func GetServerPort() int {
 	return _conf.ServerPort
-}
-
-func GetDBConf() *DBConfig {
-	return _conf.Db
 }
