@@ -133,9 +133,9 @@ func noRoute(c *gin.Context) {
 
 func SiteConfigMiddleware(configs *sync.Map) func(*gin.Context) {
 	return func(c *gin.Context) {
-		host, _, _ := net.SplitHostPort(c.Request.Host)
-		config, ok := configs.Load(host)
-		if !ok {
+		host := getHost(c.Request.Host)
+		config := getSiteConfig(host, configs)
+		if config == nil {
 			c.Data(404, HTML_CONTENT_TYPE, []byte("域名错误:"+host))
 			c.Abort()
 			return
@@ -151,7 +151,8 @@ func SiteConfigMiddleware(configs *sync.Map) func(*gin.Context) {
 
 func CacheMiddleware() func(*gin.Context) {
 	return func(c *gin.Context) {
-		data, _ := getCache(c.Request.Host, c.Request.URL.String())
+		host := getHost(c.Request.Host)
+		data, _ := getCache(host, c.Request.URL.String())
 
 		if data != nil {
 			c.Data(200, HTML_CONTENT_TYPE, data)
@@ -208,6 +209,25 @@ func respond(c *gin.Context, templateDir string, templateName string, vars jet.V
 		c.Data(200, HTML_CONTENT_TYPE, []byte("handleTemplate error"+err.Error()))
 		return
 	}
-	setCache(c.Request.Host, c.Request.URL.String(), data)
+	setCache(getHost(c.Request.Host), c.Request.URL.String(), data)
 	c.Data(200, HTML_CONTENT_TYPE, data)
+}
+func getHost(host string) string {
+	if strings.Contains(host, ":") {
+		host, _, _ = net.SplitHostPort(host)
+	}
+	return host
+}
+func getSiteConfig(host string, configs *sync.Map) *db.SiteConfig {
+	if !strings.Contains(host, ".") {
+		return nil
+	}
+	c, ok := configs.Load(host)
+	if !ok {
+		i := strings.Index(host, ".")
+		return getSiteConfig(host[i+1:], configs)
+
+	}
+	return c.(*db.SiteConfig)
+
 }

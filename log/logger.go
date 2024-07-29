@@ -7,7 +7,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func InitLog() {
+func Init() {
 	w := &lumberjack.Logger{
 		Filename:   "./logs/app.log",
 		MaxSize:    500, // megabytes

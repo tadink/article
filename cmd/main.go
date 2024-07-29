@@ -22,7 +22,7 @@ import (
 var sites *sync.Map
 
 func init() {
-	log.InitLog()
+	log.Init()
 	err := config.Init()
 	if err != nil {
 		slog.Error(err.Error())

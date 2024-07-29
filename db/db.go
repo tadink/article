@@ -89,6 +89,7 @@ func Init() error {
 }
 
 func LoadSites() (*sync.Map, error) {
+
 	stmt, err := db.Prepare(`select * from site_config`)
 	if err != nil {
 		return nil, err
